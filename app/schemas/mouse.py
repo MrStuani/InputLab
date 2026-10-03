@@ -35,3 +35,16 @@ class MouseRead(MouseBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    
+class MouseUpdate(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    brand: str | None = Field(default=None, min_length=1, max_length=80)
+    model: str | None = Field(default=None, min_length=1, max_length=120)
+    sensor: str | None = Field(default=None, max_length=80)
+    weight_g: int | None = Field(default=None, gt=0, le=300)
+    connection: Connection | None = None
+    polling_rate_hz: int | None = Field(default=None, gt=0)
+    switch_type: str | None = Field(default=None, max_length=80)
+    price: Decimal | None = Field(default=None, ge=0)
+    notes: str | None = None
