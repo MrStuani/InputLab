@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Query ,status
 import sqlalchemy
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
