@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query ,status
-from sqlalchemy import or_, select
+import sqlalchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -37,10 +37,10 @@ def list_mice(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
-    stmt = select(Mouse).order_by(Mouse.brand, Mouse.model)
+    stmt = sqlalchemy.select(Mouse).order_by(Mouse.brand, Mouse.model)
     if q:
         like = f"%{q}%"
-        stmt = stmt.where(or_(Mouse.brand.ilike(like), Mouse.model.ilike(like)))
+        stmt = stmt.where(sqlalchemy.or_(Mouse.brand.ilike(like), Mouse.model.ilike(like)))
     return db.scalars(stmt.offset(skip).limit(limit)).all()
 
 @router.get("/{mouse_id}", response_model=MouseRead)
