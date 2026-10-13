@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from fastapi import File, Form, UploadFile
+from pydantic import ValidationError
 
+from app.services.importer import ImportFailure, parse_samples
 from app.db.session import get_db
 from app.models.measurement import MeasurementSession, Sample
 from app.models.mouse import Mouse
@@ -66,3 +69,31 @@ def delete_session(session_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Sessão não encontrada")
     db.delete(session)
     db.commit()
+
+@router.post(
+    "/mice/{mouse_id}/sessions/import",
+    response_model=SessionRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def import_session(
+    mouse_id: int,
+    file: UploadFile = File(...),
+    kind: str = Form(...),
+    unit: str = Form("ms"),
+    reference_method: str | None = Form(None),
+    firmware_version: str | None = Form(None),
+    notes: str | None = Form(None),
+    db: Session = Depends(get_db),
+):
+    try:
+        meta = SessionMeta(
+            kind=kind, unit=unit, reference_method=reference_method,
+            firmware_version=firmware_version, notes=notes,
+        )
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors(include_url=False, include_context=False))
+    try:
+        values = parse_samples(file.filename or "", file.file.read())
+    except ImportFailure as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    return build_session(db, mouse_id, meta, values)
