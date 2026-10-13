@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.routers import mice
+from app.routers import measurements
 
 app = FastAPI(title="Input Lab")
 
@@ -22,3 +23,5 @@ def health(db: Session = Depends(get_db)):
 
 
 app.include_router(mice.router)
+
+app.include_router(measurements.router)
